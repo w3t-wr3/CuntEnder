@@ -448,12 +448,34 @@
   border: 1px solid var(--color-cn-border-light) !important;
   border-radius: 0.5rem !important;
   color: var(--color-cn-text) !important;
-  font-weight: 500 !important;
-  font-size: 0.875rem !important;
-  height: 2.5rem !important;
-  padding: 0 16px !important;
-  line-height: 2.5rem !important;
+  font-weight: 600 !important;
+  font-size: 0 !important;
+  height: 2.25rem !important;
+  width: auto !important;
+  padding: 0 12px !important;
+  line-height: 2.25rem !important;
   transition: border-color 0.2s, box-shadow 0.2s !important;
+}
+.wallet-adapter-button i,
+.wallet-adapter-button .wallet-adapter-button-start-icon {
+  margin-right: 6px !important;
+  width: 18px !important;
+  height: 18px !important;
+}
+.wallet-adapter-button-trigger::after {
+  content: "Connect" !important;
+  font-size: 0.75rem !important;
+}
+@media (min-width: 640px) {
+  .wallet-adapter-button {
+    font-size: 0.875rem !important;
+    height: 2.5rem !important;
+    padding: 0 16px !important;
+    line-height: 2.5rem !important;
+  }
+  .wallet-adapter-button-trigger::after {
+    content: none !important;
+  }
 }
 .wallet-adapter-button:not([disabled]):hover {
   background: var(--color-cn-surface-solid) !important;
