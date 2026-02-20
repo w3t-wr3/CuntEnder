@@ -1,150 +1,119 @@
-"use client";
-
-import { useWallet } from "@solana/wallet-adapter-react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { useUser } from "@/hooks/useUser";
-import { useChallengeList } from "@/hooks/useChallenge";
-import { ChallengeCard } from "@/components/ChallengeCard";
-import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 
-export default function Home() {
-  const { publicKey } = useWallet();
-  const { user, identity, setUsername } = useUser();
-  const { challenges, loading, refresh } = useChallengeList();
-  const [creating, setCreating] = useState(false);
-  const [usernameInput, setUsernameInput] = useState("");
-  const [showSetup, setShowSetup] = useState(false);
-
-  async function handleCreate() {
-    if (!publicKey) return;
-    setCreating(true);
-    try {
-      const res = await fetch("/api/challenges", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wallet_address: publicKey.toBase58() }),
-      });
-      const data = await res.json();
-      if (data.error) {
-        alert(data.error);
-      } else {
-        refresh();
-      }
-    } finally {
-      setCreating(false);
-    }
-  }
-
-  async function handleSetUsername() {
-    if (!usernameInput.trim()) return;
-    await setUsername(usernameInput.trim());
-    setShowSetup(false);
-  }
-
+export default function LandingPage() {
   return (
-    <main className="max-w-2xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold">CNTNDR</h1>
-        <WalletMultiButton />
+    <div className="flex flex-col items-center">
+      {/* ── Hero ── */}
+      <section className="relative w-full min-h-[calc(100vh-3rem)] flex flex-col items-center justify-center text-center px-4 overflow-hidden">
+        <div
+          className="absolute pointer-events-none z-0"
+          style={{
+            width: "1089px",
+            height: "1089px",
+            top: "43%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            background: "radial-gradient(circle, rgba(0, 212, 170, 0.12) 0%, rgba(0, 212, 170, 0.04) 40%, transparent 70%)",
+          }}
+        />
+
+        <div className="relative z-10 flex flex-col items-center" style={{ marginTop: "-400px" }}>
+          <Image
+            src="/logo.png"
+            alt="CuntEnder"
+            width={1200}
+            height={332}
+            className="w-[min(1100px,95vw)]"
+            priority
+          />
+
+          <div style={{ marginTop: "-252px" }} className="flex flex-col items-center">
+            <h1 className="cn-heading text-5xl sm:text-6xl md:text-7xl leading-tight">
+              <span className="bg-gradient-to-r from-cn-accent via-[#00e6b8] to-[#4488ff] bg-clip-text text-transparent">
+                Put your money
+              </span>
+              <br />
+              <span className="text-cn-text">
+                where your match is.
+              </span>
+            </h1>
+
+            <p className="text-cn-text text-2xl sm:text-3xl mt-4 max-w-xl tracking-wide">
+              Bet on skill based games. Played by you. Secured on Solana.
+            </p>
+
+            <Link
+              href="/lobby"
+              className="cn-btn-primary text-base font-bold px-10 py-3.5 mt-8 tracking-wider uppercase"
+            >
+              Enter the Arena
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── The Pitch ── */}
+      <section className="w-full max-w-4xl px-4 py-20 sm:py-28">
+        <div className="space-y-14">
+          <div className="flex gap-6 items-start">
+            <span className="text-cn-accent font-mono font-bold text-xl mt-1 shrink-0">01</span>
+            <div>
+              <h3 className="text-cn-text font-bold text-2xl sm:text-3xl">Challenge anyone</h3>
+              <p className="text-cn-text-muted text-lg sm:text-xl mt-2">Post a 1v1. Your opponent accepts. Both players lock USDC into an on-chain escrow.</p>
+            </div>
+          </div>
+
+          <div className="flex gap-6 items-start">
+            <span className="text-cn-accent font-mono font-bold text-xl mt-1 shrink-0">02</span>
+            <div>
+              <h3 className="text-cn-text font-bold text-2xl sm:text-3xl">Play the match</h3>
+              <p className="text-cn-text-muted text-lg sm:text-xl mt-2">Run it in Rocket League. Upload your scoreboard screenshot when it&apos;s over.</p>
+            </div>
+          </div>
+
+          <div className="flex gap-6 items-start">
+            <span className="text-cn-accent font-mono font-bold text-xl mt-1 shrink-0">03</span>
+            <div>
+              <h3 className="text-cn-text font-bold text-2xl sm:text-3xl">Winner gets paid</h3>
+              <p className="text-cn-text-muted text-lg sm:text-xl mt-2">AI verifies the result. Smart contract releases the pot. USDC hits your wallet.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Stat line ── */}
+      <div className="w-full max-w-4xl px-4">
+        <hr className="cn-divider" />
+        <div className="flex justify-center gap-16 sm:gap-28 py-14">
+          <div className="text-center">
+            <div className="cn-heading text-4xl sm:text-5xl text-cn-accent">USDC</div>
+            <div className="text-xs uppercase tracking-widest text-cn-text-muted mt-2">Stablecoin</div>
+          </div>
+          <div className="text-center">
+            <div className="cn-heading text-4xl sm:text-5xl text-cn-text">Solana</div>
+            <div className="text-xs uppercase tracking-widest text-cn-text-muted mt-2">Network</div>
+          </div>
+          <div className="text-center">
+            <div className="cn-heading text-4xl sm:text-5xl text-cn-accent">AI</div>
+            <div className="text-xs uppercase tracking-widest text-cn-text-muted mt-2">Verified</div>
+          </div>
+        </div>
+        <hr className="cn-divider" />
       </div>
 
-      {publicKey && !identity && (
-        <div className="border border-yellow-700 bg-yellow-900/20 rounded-lg p-4 mb-6">
-          <p className="text-yellow-300 text-sm mb-3">
-            Set your Rocket League username to get started
-          </p>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="RL Username"
-              value={usernameInput}
-              onChange={(e) => setUsernameInput(e.target.value)}
-              className="bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm flex-1"
-            />
-            <button
-              onClick={handleSetUsername}
-              className="bg-yellow-600 hover:bg-yellow-500 text-white text-sm px-4 py-1.5 rounded"
-            >
-              Save
-            </button>
-          </div>
-        </div>
-      )}
-
-      {publicKey && identity && (
-        <div className="flex items-center justify-between mb-6">
-          <div className="text-sm text-gray-400">
-            Playing as{" "}
-            <span className="text-white font-medium">{identity.username}</span>
-            {" "}
-            <button
-              onClick={() => setShowSetup(!showSetup)}
-              className="text-gray-500 hover:text-gray-300 ml-1"
-            >
-              (edit)
-            </button>
-          </div>
-          <button
-            onClick={handleCreate}
-            disabled={creating}
-            className="bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 text-white font-medium py-2 px-4 rounded transition-colors"
-          >
-            {creating ? "Creating..." : "Create Challenge"}
-          </button>
-        </div>
-      )}
-
-      {showSetup && identity && (
-        <div className="border border-gray-700 rounded-lg p-4 mb-6">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="New RL Username"
-              value={usernameInput}
-              onChange={(e) => setUsernameInput(e.target.value)}
-              className="bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm flex-1"
-            />
-            <button
-              onClick={handleSetUsername}
-              className="bg-yellow-600 hover:bg-yellow-500 text-white text-sm px-4 py-1.5 rounded"
-            >
-              Update
-            </button>
-          </div>
-        </div>
-      )}
-
-      {!publicKey && (
-        <div className="text-center text-gray-400 py-12">
-          Connect your Phantom wallet to get started
-        </div>
-      )}
-
-      <div className="space-y-3">
-        {loading && (
-          <div className="text-gray-500 text-center py-8">Loading...</div>
-        )}
-        {!loading && challenges.length === 0 && publicKey && (
-          <div className="text-gray-500 text-center py-8">
-            No active challenges. Create one!
-          </div>
-        )}
-        {challenges.map((c) => (
-          <ChallengeCard key={c.id} challenge={c} />
-        ))}
-      </div>
-
-      {publicKey && (
-        <div className="mt-8 text-center">
-          <Link
-            href="/profile"
-            className="text-gray-500 hover:text-gray-300 text-sm"
-          >
-            Profile
-          </Link>
-        </div>
-      )}
-    </main>
+      {/* ── Bottom CTA ── */}
+      <section className="flex flex-col items-center text-center px-4 py-24 sm:py-32">
+        <p className="text-cn-text-muted text-lg sm:text-xl uppercase tracking-widest mb-8">
+          No middleman. No trust. No bullshit.
+        </p>
+        <Link
+          href="/lobby"
+          className="cn-btn-primary text-lg font-bold px-12 py-4 tracking-wider uppercase"
+        >
+          Enter the Arena
+        </Link>
+      </section>
+    </div>
   );
 }

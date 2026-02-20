@@ -1,7 +1,17 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
+
+interface ProofResult {
+  winner_name: string;
+  winner_id: string | null;
+  confidence: number;
+  both_uploaded?: boolean;
+  agreed?: boolean;
+  waiting?: boolean;
+  dispute?: string;
+}
 
 export function ProofUpload({
   challengeId,
@@ -13,12 +23,21 @@ export function ProofUpload({
   const { publicKey } = useWallet();
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<{
-    winner_name: string;
-    confidence: number;
-  } | null>(null);
+  const [result, setResult] = useState<ProofResult | null>(null);
+  const [alreadyUploaded, setAlreadyUploaded] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Check if this user already uploaded a proof
+  useEffect(() => {
+    if (!publicKey) return;
+    fetch(`/api/challenges/${challengeId}/proof/status?wallet=${publicKey.toBase58()}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.uploaded) setAlreadyUploaded(true);
+      })
+      .catch(() => {});
+  }, [challengeId, publicKey]);
 
   const processAndUpload = useCallback(
     async (file: File) => {
@@ -81,6 +100,7 @@ export function ProofUpload({
           setError(data.error);
         } else if (data.result) {
           setResult(data.result);
+          setAlreadyUploaded(true);
           onUploaded();
         }
       } catch (e) {
@@ -92,42 +112,68 @@ export function ProofUpload({
     [challengeId, publicKey, onUploaded]
   );
 
+  const showWaiting = alreadyUploaded && !result;
+
   return (
     <div>
-      <h3 className="text-sm font-medium mb-2">Upload Match History Screenshot</h3>
-      <p className="text-xs text-gray-500 mb-3">
-        Take a screenshot of your Rocket League Match History showing the completed game.
-      </p>
+      {!result && !showWaiting && (
+        <>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) processAndUpload(file);
+            }}
+            className="hidden"
+          />
 
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/png,image/jpeg,image/webp"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) processAndUpload(file);
-        }}
-        className="hidden"
-      />
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading || !publicKey}
+            className="cn-btn-primary w-full py-3"
+          >
+            {uploading ? "Analyzing..." : "Upload Scoreboard"}
+          </button>
+        </>
+      )}
 
-      <button
-        onClick={() => fileRef.current?.click()}
-        disabled={uploading || !publicKey}
-        className="w-full bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:text-gray-500 text-white font-bold py-3 rounded transition-colors"
-      >
-        {uploading ? "Analyzing screenshot..." : "Upload Match History Screenshot"}
-      </button>
+      {showWaiting && (
+        <div className="cn-card border-cn-accent/30 p-3">
+          <p className="text-cn-accent text-sm text-center">
+            Screenshot uploaded. Waiting for opponent...
+          </p>
+        </div>
+      )}
 
       <canvas ref={canvasRef} className="hidden" />
 
-      {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
+      {error && <p className="text-cn-error text-sm mt-2">{error}</p>}
 
       {result && (
-        <div className="mt-3 p-3 bg-green-900/30 border border-green-700 rounded">
-          <p className="text-green-300 text-sm">
-            Winner: <strong>{result.winner_name}</strong> (confidence:{" "}
-            {(result.confidence * 100).toFixed(0)}%)
-          </p>
+        <div className={`mt-3 p-3 cn-card ${
+          result.both_uploaded && result.agreed
+            ? "border-cn-success/30"
+            : result.dispute
+              ? "border-cn-error/30"
+              : "border-cn-accent/30"
+        }`}>
+          {result.waiting && (
+            <p className="text-cn-accent text-sm text-center">
+              Screenshot uploaded. Waiting for opponent...
+            </p>
+          )}
+          {result.both_uploaded && result.agreed && (
+            <p className="text-cn-success text-sm text-center">
+              Both screenshots verified. Winner: <strong>{result.winner_name}</strong>
+            </p>
+          )}
+          {result.dispute && (
+            <p className="text-cn-error text-sm text-center">
+              {result.dispute}
+            </p>
+          )}
         </div>
       )}
     </div>

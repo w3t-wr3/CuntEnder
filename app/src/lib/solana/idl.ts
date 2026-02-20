@@ -1,183 +1,89 @@
-export type Cntndr = {
-  version: "0.1.0";
-  name: "cntndr";
-  instructions: [
-    {
-      name: "initChallenge";
-      accounts: [
-        { name: "challenge"; isMut: true; isSigner: false },
-        { name: "vault"; isMut: true; isSigner: false },
-        { name: "usdcMint"; isMut: false; isSigner: false },
-        { name: "resolver"; isMut: true; isSigner: true },
-        { name: "systemProgram"; isMut: false; isSigner: false },
-        { name: "tokenProgram"; isMut: false; isSigner: false },
-        { name: "associatedTokenProgram"; isMut: false; isSigner: false }
-      ];
-      args: [
-        { name: "challengeId"; type: { array: ["u8", 16] } },
-        { name: "maker"; type: "publicKey" },
-        { name: "taker"; type: "publicKey" }
-      ];
-    },
-    {
-      name: "fund";
-      accounts: [
-        { name: "challenge"; isMut: true; isSigner: false },
-        { name: "vault"; isMut: true; isSigner: false },
-        { name: "usdcMint"; isMut: false; isSigner: false },
-        { name: "player"; isMut: false; isSigner: true },
-        { name: "playerAta"; isMut: true; isSigner: false },
-        { name: "tokenProgram"; isMut: false; isSigner: false }
-      ];
-      args: [{ name: "challengeId"; type: { array: ["u8", 16] } }];
-    },
-    {
-      name: "refundOneSided";
-      accounts: [
-        { name: "challenge"; isMut: true; isSigner: false },
-        { name: "vault"; isMut: true; isSigner: false },
-        { name: "usdcMint"; isMut: false; isSigner: false },
-        { name: "resolver"; isMut: true; isSigner: true },
-        { name: "recipient"; isMut: false; isSigner: false },
-        { name: "recipientAta"; isMut: true; isSigner: false },
-        { name: "systemProgram"; isMut: false; isSigner: false },
-        { name: "tokenProgram"; isMut: false; isSigner: false },
-        { name: "associatedTokenProgram"; isMut: false; isSigner: false }
-      ];
-      args: [{ name: "challengeId"; type: { array: ["u8", 16] } }];
-    },
-    {
-      name: "resolve";
-      accounts: [
-        { name: "challenge"; isMut: true; isSigner: false },
-        { name: "vault"; isMut: true; isSigner: false },
-        { name: "usdcMint"; isMut: false; isSigner: false },
-        { name: "resolver"; isMut: true; isSigner: true },
-        { name: "recipient"; isMut: false; isSigner: false },
-        { name: "recipientAta"; isMut: true; isSigner: false },
-        { name: "systemProgram"; isMut: false; isSigner: false },
-        { name: "tokenProgram"; isMut: false; isSigner: false },
-        { name: "associatedTokenProgram"; isMut: false; isSigner: false }
-      ];
-      args: [{ name: "challengeId"; type: { array: ["u8", 16] } }];
-    },
-    {
-      name: "forfeitToPool";
-      accounts: [
-        { name: "challenge"; isMut: true; isSigner: false },
-        { name: "vault"; isMut: true; isSigner: false },
-        { name: "usdcMint"; isMut: false; isSigner: false },
-        { name: "resolver"; isMut: true; isSigner: true },
-        { name: "poolAuthority"; isMut: false; isSigner: false },
-        { name: "poolAta"; isMut: true; isSigner: false },
-        { name: "systemProgram"; isMut: false; isSigner: false },
-        { name: "tokenProgram"; isMut: false; isSigner: false },
-        { name: "associatedTokenProgram"; isMut: false; isSigner: false }
-      ];
-      args: [{ name: "challengeId"; type: { array: ["u8", 16] } }];
-    }
-  ];
-  accounts: [
-    {
-      name: "Challenge";
-      type: {
-        kind: "struct";
-        fields: [
-          { name: "challengeId"; type: { array: ["u8", 16] } },
-          { name: "maker"; type: "publicKey" },
-          { name: "taker"; type: "publicKey" },
-          { name: "makerFunded"; type: "bool" },
-          { name: "takerFunded"; type: "bool" },
-          { name: "status"; type: { defined: "ChallengeStatus" } },
-          { name: "bump"; type: "u8" }
-        ];
-      };
-    }
-  ];
-  errors: [
-    { code: 6000; name: "InvalidStatus"; msg: "Invalid challenge status for this operation" },
-    { code: 6001; name: "NotParticipant"; msg: "Signer is not a participant in this challenge" },
-    { code: 6002; name: "AlreadyFunded"; msg: "Player has already funded" },
-    { code: 6003; name: "RefundNotApplicable"; msg: "Refund not applicable" },
-    { code: 6004; name: "WrongRecipient"; msg: "Recipient does not match expected player" }
-  ];
-};
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-export const IDL: Cntndr = {
-  version: "0.1.0",
-  name: "cntndr",
+/**
+ * CNTNDR IDL — Anchor 0.30.x format
+ */
+
+export const IDL: any = {
+  address: "", // set at runtime from PROGRAM_ID
+  metadata: { name: "cntndr", version: "0.1.0", spec: "0.1.0" },
   instructions: [
     {
       name: "initChallenge",
+      discriminator: [24, 154, 153, 170, 71, 69, 5, 161],
       accounts: [
-        { name: "challenge", isMut: true, isSigner: false },
-        { name: "vault", isMut: true, isSigner: false },
-        { name: "usdcMint", isMut: false, isSigner: false },
-        { name: "resolver", isMut: true, isSigner: true },
-        { name: "systemProgram", isMut: false, isSigner: false },
-        { name: "tokenProgram", isMut: false, isSigner: false },
-        { name: "associatedTokenProgram", isMut: false, isSigner: false },
+        { name: "challenge", writable: true },
+        { name: "vault", writable: true },
+        { name: "usdcMint" },
+        { name: "resolver", writable: true, signer: true },
+        { name: "systemProgram" },
+        { name: "tokenProgram" },
+        { name: "associatedTokenProgram" },
       ],
       args: [
         { name: "challengeId", type: { array: ["u8", 16] } },
-        { name: "maker", type: "publicKey" },
-        { name: "taker", type: "publicKey" },
+        { name: "maker", type: "pubkey" },
+        { name: "taker", type: "pubkey" },
       ],
     },
     {
       name: "fund",
+      discriminator: [218, 188, 111, 221, 152, 113, 174, 7],
       accounts: [
-        { name: "challenge", isMut: true, isSigner: false },
-        { name: "vault", isMut: true, isSigner: false },
-        { name: "usdcMint", isMut: false, isSigner: false },
-        { name: "player", isMut: false, isSigner: true },
-        { name: "playerAta", isMut: true, isSigner: false },
-        { name: "tokenProgram", isMut: false, isSigner: false },
+        { name: "challenge", writable: true },
+        { name: "vault", writable: true },
+        { name: "usdcMint" },
+        { name: "player", signer: true },
+        { name: "playerAta", writable: true },
+        { name: "tokenProgram" },
       ],
       args: [{ name: "challengeId", type: { array: ["u8", 16] } }],
     },
     {
       name: "refundOneSided",
+      discriminator: [13, 71, 168, 166, 180, 199, 223, 26],
       accounts: [
-        { name: "challenge", isMut: true, isSigner: false },
-        { name: "vault", isMut: true, isSigner: false },
-        { name: "usdcMint", isMut: false, isSigner: false },
-        { name: "resolver", isMut: true, isSigner: true },
-        { name: "recipient", isMut: false, isSigner: false },
-        { name: "recipientAta", isMut: true, isSigner: false },
-        { name: "systemProgram", isMut: false, isSigner: false },
-        { name: "tokenProgram", isMut: false, isSigner: false },
-        { name: "associatedTokenProgram", isMut: false, isSigner: false },
+        { name: "challenge", writable: true },
+        { name: "vault", writable: true },
+        { name: "usdcMint" },
+        { name: "resolver", writable: true, signer: true },
+        { name: "recipient" },
+        { name: "recipientAta", writable: true },
+        { name: "systemProgram" },
+        { name: "tokenProgram" },
+        { name: "associatedTokenProgram" },
       ],
       args: [{ name: "challengeId", type: { array: ["u8", 16] } }],
     },
     {
       name: "resolve",
+      discriminator: [246, 150, 236, 206, 108, 63, 58, 10],
       accounts: [
-        { name: "challenge", isMut: true, isSigner: false },
-        { name: "vault", isMut: true, isSigner: false },
-        { name: "usdcMint", isMut: false, isSigner: false },
-        { name: "resolver", isMut: true, isSigner: true },
-        { name: "recipient", isMut: false, isSigner: false },
-        { name: "recipientAta", isMut: true, isSigner: false },
-        { name: "systemProgram", isMut: false, isSigner: false },
-        { name: "tokenProgram", isMut: false, isSigner: false },
-        { name: "associatedTokenProgram", isMut: false, isSigner: false },
+        { name: "challenge", writable: true },
+        { name: "vault", writable: true },
+        { name: "usdcMint" },
+        { name: "resolver", writable: true, signer: true },
+        { name: "recipient" },
+        { name: "recipientAta", writable: true },
+        { name: "systemProgram" },
+        { name: "tokenProgram" },
+        { name: "associatedTokenProgram" },
       ],
       args: [{ name: "challengeId", type: { array: ["u8", 16] } }],
     },
     {
       name: "forfeitToPool",
+      discriminator: [228, 7, 76, 68, 220, 81, 252, 252],
       accounts: [
-        { name: "challenge", isMut: true, isSigner: false },
-        { name: "vault", isMut: true, isSigner: false },
-        { name: "usdcMint", isMut: false, isSigner: false },
-        { name: "resolver", isMut: true, isSigner: true },
-        { name: "poolAuthority", isMut: false, isSigner: false },
-        { name: "poolAta", isMut: true, isSigner: false },
-        { name: "systemProgram", isMut: false, isSigner: false },
-        { name: "tokenProgram", isMut: false, isSigner: false },
-        { name: "associatedTokenProgram", isMut: false, isSigner: false },
+        { name: "challenge", writable: true },
+        { name: "vault", writable: true },
+        { name: "usdcMint" },
+        { name: "resolver", writable: true, signer: true },
+        { name: "poolAuthority" },
+        { name: "poolAta", writable: true },
+        { name: "systemProgram" },
+        { name: "tokenProgram" },
+        { name: "associatedTokenProgram" },
       ],
       args: [{ name: "challengeId", type: { array: ["u8", 16] } }],
     },
@@ -185,16 +91,34 @@ export const IDL: Cntndr = {
   accounts: [
     {
       name: "Challenge",
+      discriminator: [119, 250, 161, 121, 119, 81, 22, 208],
+    },
+  ],
+  types: [
+    {
+      name: "Challenge",
       type: {
         kind: "struct",
         fields: [
           { name: "challengeId", type: { array: ["u8", 16] } },
-          { name: "maker", type: "publicKey" },
-          { name: "taker", type: "publicKey" },
+          { name: "maker", type: "pubkey" },
+          { name: "taker", type: "pubkey" },
           { name: "makerFunded", type: "bool" },
           { name: "takerFunded", type: "bool" },
-          { name: "status", type: { defined: "ChallengeStatus" } },
+          { name: "status", type: { defined: { name: "ChallengeStatus" } } },
           { name: "bump", type: "u8" },
+        ],
+      },
+    },
+    {
+      name: "ChallengeStatus",
+      type: {
+        kind: "enum",
+        variants: [
+          { name: "pending" },
+          { name: "funded" },
+          { name: "resolved" },
+          { name: "cancelled" },
         ],
       },
     },

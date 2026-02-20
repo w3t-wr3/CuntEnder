@@ -14,24 +14,31 @@ export interface VerifyResult {
   error?: string;
 }
 
-const VISION_PROMPT = `You are analyzing a Rocket League Match History screenshot to determine the winner of a 1v1 match.
+function buildVisionPrompt(makerName?: string, takerName?: string): string {
+  const knownPlayers =
+    makerName && takerName
+      ? `\n\nThe two players in this challenge are: "${makerName}" and "${takerName}". Match the winner to one of these names. The names on screen may have clan tags, platform suffixes, or slight formatting differences — match by the closest username.`
+      : "";
+
+  return `You are analyzing a Rocket League scoreboard or match result screenshot to determine the winner of a 1v1 match.
 
 Extract the following from the screenshot:
-- player1_name: first player's name
+- player1_name: first player's name as shown on screen
 - player1_score: first player's score (goals)
-- player2_name: second player's name
+- player2_name: second player's name as shown on screen
 - player2_score: second player's score (goals)
-- winner_name: the player with more goals
+- winner_name: the player with more goals (use the EXACT name from the known players list if provided and it matches)
 - match_type: should be "1v1" or similar
-- confidence: your confidence 0.0-1.0 that this is a legitimate Match History screenshot
+- confidence: your confidence 0.0-1.0 that this is a legitimate Rocket League result screenshot
 
 Rules:
-- Only analyze Match History screenshots (the tabular history view, NOT the post-game scoreboard)
+- Accept any Rocket League result screen: post-game scoreboard, match history, or results screen
 - The winner is the player with the higher score
-- If you cannot determine the winner clearly, set confidence below 0.5
+- If you cannot determine the winner clearly, set confidence below 0.5${knownPlayers}
 
 Respond with ONLY valid JSON, no markdown fences, no explanation:
 {"player1_name":"...","player1_score":0,"player2_name":"...","player2_score":0,"winner_name":"...","match_type":"...","confidence":0.0}`;
+}
 
 function parseResponse(text: string): Record<string, unknown> {
   // Strip markdown code fences if present
@@ -45,8 +52,11 @@ function parseResponse(text: string): Record<string, unknown> {
 async function analyzeWithModel(
   imageBase64: string,
   mediaType: "image/png" | "image/jpeg" | "image/webp",
-  model: string
+  model: string,
+  makerName?: string,
+  takerName?: string
 ): Promise<{ parsed: Record<string, unknown>; raw: string }> {
+  const prompt = buildVisionPrompt(makerName, takerName);
   const response = await anthropic.messages.create({
     model,
     max_tokens: 512,
@@ -58,7 +68,7 @@ async function analyzeWithModel(
             type: "image",
             source: { type: "base64", media_type: mediaType, data: imageBase64 },
           },
-          { type: "text", text: VISION_PROMPT },
+          { type: "text", text: prompt },
         ],
       },
     ],
@@ -72,14 +82,18 @@ async function analyzeWithModel(
 
 export async function verifyProof(
   imageBase64: string,
-  mediaType: "image/png" | "image/jpeg" | "image/webp" = "image/png"
+  mediaType: "image/png" | "image/jpeg" | "image/webp" = "image/png",
+  makerName?: string,
+  takerName?: string
 ): Promise<VerifyResult> {
   // Try Haiku first
   try {
     const { parsed } = await analyzeWithModel(
       imageBase64,
       mediaType,
-      "claude-haiku-4-5-20251001"
+      "claude-haiku-4-5-20251001",
+      makerName,
+      takerName
     );
 
     const confidence = Number(parsed.confidence ?? 0);
@@ -120,7 +134,9 @@ export async function verifyProof(
     const { parsed } = await analyzeWithModel(
       imageBase64,
       mediaType,
-      "claude-sonnet-4-6"
+      "claude-sonnet-4-6",
+      makerName,
+      takerName
     );
 
     const confidence = Number(parsed.confidence ?? 0);

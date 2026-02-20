@@ -30,7 +30,8 @@ export function getResolverProvider(): AnchorProvider {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getProgram(): Program<any> {
   const provider = getResolverProvider();
-  // Legacy IDL format (Anchor 0.30.x)
+  // Anchor 0.30.x: Program(idl, provider) — programId comes from IDL
+  const idlWithAddress = { ...IDL, address: PROGRAM_ID.toBase58() };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new Program(IDL as any, PROGRAM_ID as any, provider as any);
+  return new Program(idlWithAddress as any, provider as any);
 }

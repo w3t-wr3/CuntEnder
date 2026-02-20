@@ -1,1 +1,600 @@
 @import "tailwindcss";
+@import "@solana/wallet-adapter-react-ui/styles.css";
+
+/* ── CNTNDR Design System ── */
+
+@theme {
+  /* Backgrounds */
+  --color-cn-bg: #08080d;
+  --color-cn-bg-elevated: #111119;
+
+  /* Surfaces */
+  --color-cn-surface: rgba(17, 17, 25, 0.7);
+  --color-cn-surface-solid: #16161f;
+
+  /* Borders */
+  --color-cn-border: #2a2a3a;
+  --color-cn-border-light: #3a3a4a;
+  --color-cn-border-bright: #5a5a70;
+
+  /* Primary accent: Turquoise/Cyan */
+  --color-cn-accent: #00d4aa;
+  --color-cn-accent-dim: #00a888;
+  --color-cn-accent-glow: rgba(0, 212, 170, 0.3);
+
+  /* Text hierarchy */
+  --color-cn-text: #eeeef2;
+  --color-cn-text-secondary: #a0a0b8;
+  --color-cn-text-muted: #6a6a80;
+
+  /* Status colors */
+  --color-cn-open: #00d4aa;
+  --color-cn-accepted: #f0c040;
+  --color-cn-funded: #4488ff;
+  --color-cn-proof: #a855f7;
+  --color-cn-resolved: #8888a0;
+  --color-cn-cancelled: #ef4444;
+
+  /* Semantic */
+  --color-cn-success: #00d4aa;
+  --color-cn-error: #ef4444;
+  --color-cn-warning: #f0c040;
+
+  /* Font families */
+  --font-heading: var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  /* Animations */
+  --animate-fade-in: fade-in 0.4s ease-out;
+  --animate-glow-pulse: glow-pulse 2s ease-in-out infinite;
+  --animate-urgent-pulse: urgent-pulse 1s ease-in-out infinite;
+  --animate-shimmer: shimmer 2s linear infinite;
+}
+
+/* ── Keyframes ── */
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 8px var(--color-cn-accent-glow); }
+  50% { box-shadow: 0 0 20px var(--color-cn-accent-glow), 0 0 40px rgba(0, 212, 170, 0.1); }
+}
+
+@keyframes urgent-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* ── Base Layer ── */
+
+@layer base {
+  body {
+    background-color: var(--color-cn-bg);
+    color: var(--color-cn-text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-image:
+      linear-gradient(rgba(42, 42, 58, 0.12) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(42, 42, 58, 0.12) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  ::selection {
+    background-color: rgba(0, 212, 170, 0.25);
+    color: #fff;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-cn-bg);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-cn-border);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-cn-border-light);
+  }
+}
+
+/* ── Component Layer ── */
+
+@layer components {
+  /* ── Glass Cards ── */
+  .cn-card {
+    background: var(--color-cn-surface);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--color-cn-border);
+    border-radius: 0.75rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .cn-card-glow:hover {
+    border-color: var(--color-cn-accent-dim);
+    box-shadow: 0 0 16px var(--color-cn-accent-glow), 0 4px 24px rgba(0, 0, 0, 0.3);
+  }
+
+  /* ── Buttons ── */
+  .cn-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #00d4aa, #00b894);
+    color: #08080d;
+    font-weight: 700;
+    border-radius: 0.5rem;
+    padding: 0.625rem 1.5rem;
+    transition: box-shadow 0.2s, transform 0.1s;
+    cursor: pointer;
+  }
+  .cn-btn-primary:hover {
+    box-shadow: 0 0 20px var(--color-cn-accent-glow), 0 0 40px rgba(0, 212, 170, 0.15);
+    transform: translateY(-1px);
+  }
+  .cn-btn-primary:disabled {
+    background: var(--color-cn-surface-solid);
+    color: var(--color-cn-text-muted);
+    box-shadow: none;
+    transform: none;
+    cursor: not-allowed;
+  }
+
+  .cn-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: var(--color-cn-surface-solid);
+    color: var(--color-cn-text-secondary);
+    font-weight: 500;
+    border: 1px solid var(--color-cn-border);
+    border-radius: 0.5rem;
+    padding: 0.625rem 1.5rem;
+    transition: border-color 0.2s, color 0.2s;
+    cursor: pointer;
+  }
+  .cn-btn-secondary:hover {
+    border-color: var(--color-cn-border-bright);
+    color: var(--color-cn-text);
+  }
+
+  .cn-btn-accent {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #00d4aa, #00b894);
+    color: #08080d;
+    font-weight: 700;
+    border-radius: 0.5rem;
+    transition: box-shadow 0.2s, transform 0.1s;
+    cursor: pointer;
+  }
+  .cn-btn-accent:hover {
+    box-shadow: 0 0 20px var(--color-cn-accent-glow);
+    transform: translateY(-1px);
+  }
+  .cn-btn-accent:disabled {
+    background: var(--color-cn-surface-solid);
+    color: var(--color-cn-text-muted);
+    box-shadow: none;
+    transform: none;
+    cursor: not-allowed;
+  }
+
+  .cn-btn-warning {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #f0c040, #d4a020);
+    color: #08080d;
+    font-weight: 700;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    transition: box-shadow 0.2s, transform 0.1s;
+    cursor: pointer;
+  }
+  .cn-btn-warning:hover {
+    box-shadow: 0 0 16px rgba(240, 192, 64, 0.3);
+    transform: translateY(-1px);
+  }
+
+  .cn-btn-proof {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #a855f7, #8b3fe0);
+    color: #fff;
+    font-weight: 700;
+    border-radius: 0.5rem;
+    transition: box-shadow 0.2s, transform 0.1s;
+    cursor: pointer;
+  }
+  .cn-btn-proof:hover {
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+    transform: translateY(-1px);
+  }
+  .cn-btn-proof:disabled {
+    background: var(--color-cn-surface-solid);
+    color: var(--color-cn-text-muted);
+    box-shadow: none;
+    transform: none;
+    cursor: not-allowed;
+  }
+
+  /* ── Input ── */
+  .cn-input {
+    background: var(--color-cn-bg);
+    border: 1px solid var(--color-cn-border);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    color: var(--color-cn-text);
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .cn-input::placeholder {
+    color: var(--color-cn-text-muted);
+  }
+  .cn-input:focus {
+    border-color: var(--color-cn-accent);
+    box-shadow: 0 0 0 2px var(--color-cn-accent-glow);
+  }
+
+  /* ── Badges ── */
+  .cn-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+    border: 1px solid transparent;
+  }
+  .cn-badge-open {
+    color: var(--color-cn-open);
+    background: rgba(0, 212, 170, 0.1);
+    border-color: rgba(0, 212, 170, 0.25);
+  }
+  .cn-badge-accepted {
+    color: var(--color-cn-accepted);
+    background: rgba(240, 192, 64, 0.1);
+    border-color: rgba(240, 192, 64, 0.25);
+  }
+  .cn-badge-funded {
+    color: var(--color-cn-funded);
+    background: rgba(68, 136, 255, 0.1);
+    border-color: rgba(68, 136, 255, 0.25);
+  }
+  .cn-badge-proof {
+    color: var(--color-cn-proof);
+    background: rgba(168, 85, 247, 0.1);
+    border-color: rgba(168, 85, 247, 0.25);
+  }
+  .cn-badge-resolved {
+    color: var(--color-cn-resolved);
+    background: rgba(136, 136, 160, 0.1);
+    border-color: rgba(136, 136, 160, 0.25);
+  }
+  .cn-badge-cancelled {
+    color: var(--color-cn-cancelled);
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.25);
+  }
+
+  /* ── Heading ── */
+  .cn-heading {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    text-shadow: 0 0 30px rgba(0, 212, 170, 0.15);
+  }
+
+  /* ── Timer ── */
+  .cn-timer {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    background: var(--color-cn-bg);
+    border: 1px solid var(--color-cn-border);
+  }
+  .cn-timer-normal {
+    color: var(--color-cn-accepted);
+    border-color: rgba(240, 192, 64, 0.2);
+  }
+  .cn-timer-urgent {
+    color: var(--color-cn-cancelled);
+    border-color: rgba(239, 68, 68, 0.3);
+    animation: urgent-pulse 1s ease-in-out infinite;
+  }
+
+  /* ── Panels ── */
+  .cn-panel {
+    background: var(--color-cn-bg-elevated);
+    border: 1px solid var(--color-cn-border);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+  }
+  .cn-panel-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-cn-text-muted);
+    margin-bottom: 0.25rem;
+  }
+
+  /* ── USDC Amount (gradient text) ── */
+  .cn-amount {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    background: linear-gradient(135deg, #00d4aa, #4488ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Divider ── */
+  .cn-divider {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--color-cn-border-bright), transparent);
+    margin: 1.5rem 0;
+  }
+
+  /* ── VS Separator ── */
+  .cn-vs {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--color-cn-text-muted);
+    padding: 0 0.5rem;
+  }
+
+  /* ── Glow Dot ── */
+  .cn-glow-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: var(--color-cn-accent);
+    box-shadow: 0 0 8px var(--color-cn-accent-glow);
+    animation: glow-pulse 2s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+
+  /* ── Profile Badge ── */
+  .cn-profile-badge {
+    border: 2.5px solid transparent;
+    background-image:
+      linear-gradient(135deg, #00d4aa, #00b894),
+      linear-gradient(160deg, #e8e8f0, #8888a0 30%, #c0c0d0 50%, #8888a0 70%, #e8e8f0);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    box-shadow:
+      0 0 12px var(--color-cn-accent-glow),
+      0 0 1px rgba(255, 255, 255, 0.3),
+      0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+  .cn-profile-badge:hover {
+    box-shadow:
+      0 0 20px var(--color-cn-accent-glow),
+      0 0 2px rgba(255, 255, 255, 0.4),
+      0 4px 16px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* ── Landing Page ── */
+
+.cn-hero-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(0, 212, 170, 0.15) 0%, rgba(0, 212, 170, 0.05) 40%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+
+.cn-live-text {
+  color: var(--color-cn-accent);
+  text-shadow: 0 0 8px var(--color-cn-accent-glow), 0 0 20px rgba(0, 212, 170, 0.15);
+  animation: live-glow 2s ease-in-out infinite;
+}
+
+@keyframes live-glow {
+  0%, 100% { text-shadow: 0 0 8px var(--color-cn-accent-glow), 0 0 20px rgba(0, 212, 170, 0.15); }
+  50% { text-shadow: 0 0 12px var(--color-cn-accent-glow), 0 0 30px rgba(0, 212, 170, 0.25); }
+}
+
+.cn-fade-in-up {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fade-in 0.6s ease-out forwards;
+}
+.cn-fade-in-up-1 { animation-delay: 0.1s; }
+.cn-fade-in-up-2 { animation-delay: 0.25s; }
+.cn-fade-in-up-3 { animation-delay: 0.4s; }
+.cn-fade-in-up-4 { animation-delay: 0.55s; }
+
+/* ── Wallet Adapter Overrides ── */
+
+/* Main button in nav */
+.wallet-adapter-button {
+  background: var(--color-cn-surface-solid) !important;
+  border: 1px solid var(--color-cn-border-light) !important;
+  border-radius: 0.5rem !important;
+  color: var(--color-cn-text) !important;
+  font-weight: 500 !important;
+  font-size: 0.875rem !important;
+  height: 2.5rem !important;
+  padding: 0 16px !important;
+  line-height: 2.5rem !important;
+  transition: border-color 0.2s, box-shadow 0.2s !important;
+}
+.wallet-adapter-button:not([disabled]):hover {
+  background: var(--color-cn-surface-solid) !important;
+  border-color: var(--color-cn-accent-dim) !important;
+  box-shadow: 0 0 12px var(--color-cn-accent-glow) !important;
+  color: #fff !important;
+}
+.wallet-adapter-button-trigger {
+  background: linear-gradient(135deg, #00d4aa, #00b894) !important;
+  color: #08080d !important;
+  font-weight: 700 !important;
+  border: none !important;
+}
+
+/* Modal backdrop */
+.wallet-adapter-modal {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(0, 0, 0, 0.7) !important;
+  z-index: 1040 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow-y: auto !important;
+}
+.wallet-adapter-modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Modal container (centers the dialog) */
+.wallet-adapter-modal-container {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 100vh !important;
+  margin: 0 !important;
+  padding: 1rem !important;
+  position: relative !important;
+  z-index: 1050 !important;
+}
+
+/* Modal dialog */
+.wallet-adapter-modal-wrapper {
+  background: var(--color-cn-bg-elevated) !important;
+  border: 1px solid var(--color-cn-border) !important;
+  border-radius: 0.75rem !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 24px var(--color-cn-accent-glow) !important;
+  max-width: 400px !important;
+  width: 100% !important;
+  position: relative !important;
+  z-index: 1050 !important;
+}
+
+/* Modal title */
+.wallet-adapter-modal-title {
+  color: var(--color-cn-text) !important;
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  padding: 2rem 2rem 1.5rem !important;
+}
+
+/* Close button */
+.wallet-adapter-modal-button-close {
+  background: var(--color-cn-surface-solid) !important;
+  border: 1px solid var(--color-cn-border) !important;
+  border-radius: 50% !important;
+  padding: 8px !important;
+  cursor: pointer !important;
+  z-index: 1060 !important;
+}
+.wallet-adapter-modal-button-close svg {
+  fill: var(--color-cn-text-muted) !important;
+}
+.wallet-adapter-modal-button-close:hover svg {
+  fill: var(--color-cn-text) !important;
+}
+
+/* Wallet list */
+.wallet-adapter-modal-list {
+  padding: 0 1rem 1rem !important;
+  margin: 0 !important;
+}
+.wallet-adapter-modal-list .wallet-adapter-button {
+  width: 100% !important;
+  background: var(--color-cn-surface-solid) !important;
+  border: 1px solid var(--color-cn-border) !important;
+  border-radius: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+  height: 3rem !important;
+  font-size: 1rem !important;
+  color: var(--color-cn-text) !important;
+}
+.wallet-adapter-modal-list .wallet-adapter-button:not([disabled]):hover {
+  border-color: var(--color-cn-accent-dim) !important;
+  background: var(--color-cn-bg-elevated) !important;
+  box-shadow: 0 0 8px var(--color-cn-accent-glow) !important;
+}
+
+/* "More options" / collapse button */
+.wallet-adapter-modal-list-more {
+  color: var(--color-cn-text-muted) !important;
+  background: transparent !important;
+}
+.wallet-adapter-modal-list-more svg {
+  fill: var(--color-cn-text-muted) !important;
+}
+
+/* Middle section (install wallet prompt) */
+.wallet-adapter-modal-middle {
+  padding: 0 1.5rem 1.5rem !important;
+}
+.wallet-adapter-modal-middle-button {
+  background: linear-gradient(135deg, #00d4aa, #00b894) !important;
+  color: #08080d !important;
+  font-weight: 700 !important;
+  border: none !important;
+  border-radius: 0.5rem !important;
+  cursor: pointer !important;
+}
+
+/* Dropdown (when already connected, shows disconnect etc.) */
+.wallet-adapter-dropdown-list {
+  background: var(--color-cn-bg-elevated) !important;
+  border: 1px solid var(--color-cn-border) !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5) !important;
+  padding: 0.5rem !important;
+}
+.wallet-adapter-dropdown-list-item {
+  color: var(--color-cn-text) !important;
+  border-radius: 0.375rem !important;
+  background: transparent !important;
+}
+.wallet-adapter-dropdown-list-item:not([disabled]):hover {
+  background: var(--color-cn-surface-solid) !important;
+}

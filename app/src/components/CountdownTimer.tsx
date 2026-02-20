@@ -11,6 +11,7 @@ export function CountdownTimer({
 }) {
   const [remaining, setRemaining] = useState("");
   const [expired, setExpired] = useState(false);
+  const [urgent, setUrgent] = useState(false);
 
   useEffect(() => {
     function tick() {
@@ -18,8 +19,10 @@ export function CountdownTimer({
       if (diff <= 0) {
         setRemaining("0:00");
         setExpired(true);
+        setUrgent(false);
         return;
       }
+      setUrgent(diff < 60_000);
       const mins = Math.floor(diff / 60000);
       const secs = Math.floor((diff % 60000) / 1000);
       setRemaining(`${mins}:${secs.toString().padStart(2, "0")}`);
@@ -31,9 +34,10 @@ export function CountdownTimer({
 
   return (
     <div
-      className={`text-sm font-mono ${expired ? "text-red-400" : "text-yellow-400"}`}
+      className={`cn-timer ${expired ? "cn-timer-urgent" : urgent ? "cn-timer-urgent" : "cn-timer-normal"}`}
     >
-      {label}: {remaining}
+      <span className="text-cn-text-muted text-xs uppercase tracking-wider">{label}</span>
+      <span className="font-bold tabular-nums">{remaining}</span>
     </div>
   );
 }

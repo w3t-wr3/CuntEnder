@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PublicKey } from "@solana/web3.js";
 import { getServiceSupabase } from "@/lib/supabase/server";
 import { verifyProof } from "@/lib/vision/verify-proof";
-import { resolveOnChain } from "@/lib/solana/transactions";
 import { PROOF_WINDOW_MS } from "@/lib/solana/program";
-import { uuidToBytes } from "@/lib/utils/uuid-bytes";
+
+function normalize(s: string) {
+  return s.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function fuzzyMatch(a: string, b: string): boolean {
+  const na = normalize(a);
+  const nb = normalize(b);
+  return na === nb || na.includes(nb) || nb.includes(na);
+}
 
 export async function POST(
   req: NextRequest,
@@ -61,6 +68,22 @@ export async function POST(
       return NextResponse.json({ error: "Not a participant" }, { status: 403 });
     }
 
+    // Check if this player already uploaded a proof
+    const { data: existingProof } = await sb
+      .from("proofs")
+      .select("id")
+      .eq("challenge_id", id)
+      .eq("uploader_id", uploader.id)
+      .limit(1)
+      .maybeSingle();
+
+    if (existingProof) {
+      return NextResponse.json(
+        { error: "You already uploaded a screenshot" },
+        { status: 400 }
+      );
+    }
+
     // If moving from FUNDED to PROOF_PENDING, set timer
     if (challenge.status === "FUNDED") {
       await sb
@@ -92,18 +115,7 @@ export async function POST(
     const { data: urlData } = sb.storage.from("proofs").getPublicUrl(fileName);
     const imageUrl = urlData?.publicUrl ?? fileName;
 
-    // Run vision analysis
-    const visionResult = await verifyProof(
-      image_base64,
-      media_type ?? "image/png"
-    );
-
-    // Get game identities for matching
-    const makerWallet = (challenge.maker as { id: string; wallet_address: string })
-      .wallet_address;
-    const takerWallet = (challenge.taker as { id: string; wallet_address: string })
-      .wallet_address;
-
+    // Get game identities for vision matching
     const { data: makerIdentity } = await sb
       .from("game_identities")
       .select("username")
@@ -118,84 +130,123 @@ export async function POST(
       .eq("game", "rocket_league")
       .single();
 
-    // Match winner name to a user
-    let verifiedWinnerId: string | null = null;
-    let winnerWallet: string | null = null;
+    // Run vision analysis with player names
+    const visionResult = await verifyProof(
+      image_base64,
+      media_type ?? "image/png",
+      makerIdentity?.username,
+      takerIdentity?.username
+    );
+
+    // Match vision winner to a user ID (for this individual screenshot)
+    let thisWinnerId: string | null = null;
 
     if (visionResult.success && visionResult.winner_name) {
-      const winnerName = visionResult.winner_name.toLowerCase();
-      if (
-        makerIdentity &&
-        winnerName === makerIdentity.username.toLowerCase()
-      ) {
-        verifiedWinnerId = challenge.maker_id;
-        winnerWallet = makerWallet;
-      } else if (
-        takerIdentity &&
-        winnerName === takerIdentity.username.toLowerCase()
-      ) {
-        verifiedWinnerId = challenge.taker_id;
-        winnerWallet = takerWallet;
+      console.log(
+        `[proof] Vision winner: "${visionResult.winner_name}" | Maker: "${makerIdentity?.username}" | Taker: "${takerIdentity?.username}"`
+      );
+
+      if (makerIdentity && fuzzyMatch(visionResult.winner_name, makerIdentity.username)) {
+        thisWinnerId = challenge.maker_id;
+      } else if (takerIdentity && fuzzyMatch(visionResult.winner_name, takerIdentity.username)) {
+        thisWinnerId = challenge.taker_id;
+      } else {
+        console.warn(
+          `[proof] Could not match "${visionResult.winner_name}" to either player`
+        );
       }
     }
 
-    // Save proof record
+    // Save proof — verified_winner stays null until both upload
     await sb.from("proofs").insert({
       challenge_id: id,
       uploader_id: uploader.id,
       image_url: imageUrl,
-      ocr_json: visionResult.raw_json,
-      verified_winner: verifiedWinnerId,
+      ocr_json: {
+        ...visionResult.raw_json,
+        matched_winner_id: thisWinnerId,
+      },
+      verified_winner: null,
       confidence: visionResult.confidence,
     });
 
-    // If we have a verified winner with good confidence, resolve on-chain
-    if (verifiedWinnerId && winnerWallet && visionResult.confidence >= 0.75) {
-      try {
-        const challengeIdBytes = uuidToBytes(id);
-        const winnerPubkey = new PublicKey(winnerWallet);
-        const resolveSig = await resolveOnChain(challengeIdBytes, winnerPubkey);
+    // Check if BOTH players have now uploaded
+    const { data: allProofs } = await sb
+      .from("proofs")
+      .select("uploader_id, ocr_json, confidence")
+      .eq("challenge_id", id)
+      .order("created_at", { ascending: false });
 
-        await sb
-          .from("challenges")
-          .update({ status: "RESOLVED" })
-          .eq("id", id);
+    const makerProof = allProofs?.find((p: any) => p.uploader_id === challenge.maker_id);
+    const takerProof = allProofs?.find((p: any) => p.uploader_id === challenge.taker_id);
 
+    if (makerProof && takerProof) {
+      // Both uploaded — compare results
+      const makerSaysWinner = (makerProof.ocr_json as any)?.matched_winner_id ?? null;
+      const takerSaysWinner = (takerProof.ocr_json as any)?.matched_winner_id ?? null;
+
+      console.log(
+        `[proof] Both uploaded. Maker says: ${makerSaysWinner}, Taker says: ${takerSaysWinner}`
+      );
+
+      if (makerSaysWinner && takerSaysWinner && makerSaysWinner === takerSaysWinner) {
+        // Both agree — set verified winner
+        const avgConfidence = ((makerProof.confidence ?? 0) + (takerProof.confidence ?? 0)) / 2;
+
+        // Update the most recent proof to have the verified winner
         await sb
-          .from("escrow")
-          .update({ resolve_tx: resolveSig })
-          .eq("challenge_id", id);
+          .from("proofs")
+          .update({
+            verified_winner: makerSaysWinner,
+            confidence: avgConfidence,
+          })
+          .eq("challenge_id", id)
+          .eq("uploader_id", uploader.id);
 
         return NextResponse.json({
           result: {
             winner_name: visionResult.winner_name,
-            confidence: visionResult.confidence,
-            resolved: true,
-            resolve_tx: resolveSig,
+            winner_id: makerSaysWinner,
+            confidence: avgConfidence,
+            both_uploaded: true,
+            agreed: true,
           },
         });
-      } catch (e) {
-        console.error("On-chain resolve failed:", e);
+      } else if (makerSaysWinner && takerSaysWinner && makerSaysWinner !== takerSaysWinner) {
+        // Disagreement — flag for manual review
         return NextResponse.json({
           result: {
             winner_name: visionResult.winner_name,
+            winner_id: null,
+            confidence: 0,
+            both_uploaded: true,
+            agreed: false,
+            dispute: "Screenshots show different winners. Manual review needed.",
+          },
+        });
+      } else {
+        // One or both couldn't match — partial result
+        return NextResponse.json({
+          result: {
+            winner_name: visionResult.winner_name,
+            winner_id: null,
             confidence: visionResult.confidence,
-            resolved: false,
-            error: "On-chain resolve failed, manual review needed",
+            both_uploaded: true,
+            agreed: false,
+            dispute: "Could not match winner from one or both screenshots.",
           },
         });
       }
     }
 
-    // Could not auto-resolve
+    // Only one player uploaded so far
     return NextResponse.json({
       result: {
         winner_name: visionResult.winner_name,
+        winner_id: null,
         confidence: visionResult.confidence,
-        resolved: false,
-        reason: verifiedWinnerId
-          ? "Low confidence"
-          : "Could not match winner name to a participant",
+        both_uploaded: false,
+        waiting: true,
       },
     });
   } catch (e) {

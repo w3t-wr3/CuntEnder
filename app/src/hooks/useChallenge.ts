@@ -15,6 +15,8 @@ interface Challenge {
   created_at: string;
   maker?: { id: string; wallet_address: string; display_name: string | null };
   taker?: { id: string; wallet_address: string; display_name: string | null } | null;
+  verified_winner_id?: string | null;
+  winner_confidence?: number | null;
 }
 
 export function useChallenge(challengeId: string) {

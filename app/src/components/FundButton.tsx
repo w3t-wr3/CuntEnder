@@ -15,6 +15,7 @@ export function FundButton({
   const { connection } = useConnection();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [funded, setFunded] = useState(false);
 
   async function handleFund() {
     if (!publicKey) return;
@@ -55,6 +56,7 @@ export function FundButton({
       const confirmData = await confirmRes.json();
       if (confirmData.error) throw new Error(confirmData.error);
 
+      setFunded(true);
       onFunded();
     } catch (e) {
       setError(String(e));
@@ -63,16 +65,26 @@ export function FundButton({
     }
   }
 
+  if (funded) {
+    return (
+      <div className="cn-card border-cn-success/30 p-3">
+        <p className="text-cn-success text-sm font-medium text-center">
+          Funded successfully! Waiting for opponent to fund.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div>
+    <div className="text-center">
       <button
         onClick={handleFund}
         disabled={loading || !publicKey}
-        className="bg-green-600 hover:bg-green-500 disabled:bg-gray-700 disabled:text-gray-500 text-white font-bold py-2 px-6 rounded transition-colors"
+        className="cn-btn-accent w-full py-3"
       >
         {loading ? "Funding..." : "Fund $1 USDC"}
       </button>
-      {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
+      {error && <p className="text-cn-error text-sm mt-2">{error}</p>}
     </div>
   );
 }
